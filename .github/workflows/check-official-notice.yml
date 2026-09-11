@@ -1,0 +1,79 @@
+name: Check official holiday notice
+
+on:
+  schedule:
+    - cron: "17 2 * 9-12 *"
+  workflow_dispatch:
+    inputs:
+      year:
+        description: Schedule year to check; blank means next year
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Select schedule year
+        id: year
+        env:
+          INPUT_YEAR: ${{ inputs.year }}
+        run: |
+          if [ -n "$INPUT_YEAR" ]; then
+            YEAR="$INPUT_YEAR"
+          else
+            YEAR="$(python3 -c 'from datetime import date; print(date.today().year + 1)')"
+          fi
+          echo "value=$YEAR" >> "$GITHUB_OUTPUT"
+      - name: Prepare review branch
+        env:
+          YEAR: ${{ steps.year.outputs.value }}
+        run: |
+          BRANCH="automation/holidays-$YEAR"
+          if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH:$BRANCH"
+            git checkout "$BRANCH"
+          else
+            git checkout -b "$BRANCH"
+          fi
+      - name: Detect and validate
+        env:
+          YEAR: ${{ steps.year.outputs.value }}
+        run: |
+          python3 scripts/check_official_notice.py --year "$YEAR"
+          python3 scripts/build_manifest.py
+          python3 scripts/validate_holidays.py
+          python3 -m unittest discover -s tests -v
+      - name: Open or update review PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YEAR: ${{ steps.year.outputs.value }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No reviewed data changes detected."
+            exit 0
+          fi
+          BRANCH="automation/holidays-$YEAR"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "holidays/$YEAR.json" manifest.json
+          git commit -m "Add official $YEAR holiday data"
+          git push -u origin "$BRANCH"
+          if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq length)" = "0" ]; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "Add official $YEAR holiday data" \
+              --body "Detected from the official gov.cn policy library. Review all dates and the source URL before merging."
+          fi
+

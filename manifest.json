@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2025-11-04",
+  "years": {
+    "2026": {
+      "version": "2026.1",
+      "path": "holidays/2026.json",
+      "sha256": "51d50edc6a28caa07bbc286300474784cf5819adfb5ef8d7337ed6e01c6dc45f",
+      "publishedAt": "2025-11-04"
+    }
+  }
+}

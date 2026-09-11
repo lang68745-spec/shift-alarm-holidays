@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lang68745-spec.github.io/shift-alarm-holidays/schema/holiday-year.schema.json",
+  "title": "China Holiday Year",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "year",
+    "version",
+    "publishedAt",
+    "timezone",
+    "source",
+    "periods",
+    "daysOff",
+    "adjustedWorkdays"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "year": { "type": "integer", "minimum": 2000, "maximum": 2100 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[1-9][0-9]*$" },
+    "publishedAt": { "type": "string", "format": "date" },
+    "timezone": { "const": "Asia/Shanghai" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "documentNumber", "url"],
+      "properties": {
+        "publisher": { "const": "国务院办公厅" },
+        "documentNumber": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "pattern": "^https://www\\.gov\\.cn/" }
+      }
+    },
+    "periods": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "daysOff", "adjustedWorkdays"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "daysOff": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "format": "date" }
+          },
+          "adjustedWorkdays": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "format": "date" }
+          }
+        }
+      }
+    },
+    "daysOff": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "format": "date" }
+    },
+    "adjustedWorkdays": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "format": "date" }
+    }
+  }
+}
+
