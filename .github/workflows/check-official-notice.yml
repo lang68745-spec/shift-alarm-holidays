@@ -18,10 +18,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Select schedule year
@@ -76,4 +76,3 @@ jobs:
               --title "Add official $YEAR holiday data" \
               --body "Detected from the official gov.cn policy library. Review all dates and the source URL before merging."
           fi
-
